@@ -9,8 +9,8 @@ Check time every minute and ping static when raid time is starting.
 
 ## Argument:
 
--Timezone: Enter your local timezone. Ex. -5 (EST)/ -4(ET). If this is not passed, the bot will use EST as the default timezone
--Format: Add the word 'Full' for a full date/time format.
+- Timezone: Enter your local timezone. Ex. -5 (EST)/ -4(ET). If this is not passed, the bot will use EST as the default timezone
+- Format: Add the word 'Full' for a full date/time format.
 
 ## Example:
 TS(16:00:00 -5 Full), TS(15), TS(06 PM -5), TS(3 -5 Full)
