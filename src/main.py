@@ -1,58 +1,39 @@
 import discord
 import re
 from datetime import datetime, timedelta
-import time
 from discord.ext import commands
 from discord import app_commands
-from utcToTimestampConverter import *
+from discord_timestamp_converter import *
+from RaidNotif import *
+import json
 import os
 
-estTimeZone = (4 if time.daylight else 5)
-GUILD_ID = [discord.Object(id=349618628854808576), discord.Object(id=1252654002185961482)]
+try:
+    with open("DiscordId.json", "r") as f:
+        discord_ids = json.load(f)
+except (ValueError, FileNotFoundError) as e:
+    print(f'Error: {e}')
 
-def timezoneConverter(originalTime, utc = 0, format="t"):
-    now_utc = datetime.now()
+GUILD_ID = [discord_ids["oreo_id"], discord_ids["dev_id"]]
 
-    clock = re.findall(r'\d+', originalTime)
-    hour = int(clock[0])
-    minute = int(clock[1] if len(clock) > 1 else 0)
-    second = int(clock[2] if len(clock) > 2 else 0)
-
-    timezone = re.search(r'[\+\-]\d', originalTime)
-    tz = timezone.group() if timezone else 0
-    tz = utc if utc != 0 else tz
-    tzdiff = estTimeZone + int(tz)
-    if "pm" in originalTime or hour > 12:
-        # add 12 hour so 4 become 16, if condition is met
-        # date = datetime(now_utc.year, now_utc.month, now_utc.day, int(clock[0]) + (0 if int(clock[0]) > 12 and int(clock[0]) != 0 else 12), minute, second)
-        date = datetime(now_utc.year, now_utc.month, now_utc.day, hour + (0 if hour > 12 and hour != 0 else 12), minute, second) - timedelta(hours=tzdiff)
-        
-    # does it matter? if people don't specify am or pm, we just assume it's am
-    # if "am" in time:
-    else:
-        # date = datetime(now_utc.year, now_utc.month, now_utc.day, int(clock[0]), minute, second)
-        date = datetime(now_utc.year, now_utc.month, now_utc.day, hour, minute, second) - timedelta(hours=tzdiff)
-    timestamp = timestampConverter(date)
-    if "full" in originalTime:
-        return f'<t:{timestamp}:f>'
-    elif format != "":
-        return f'<t:{timestamp}:{format}>'
-    else:
-        return f'<t:{timestamp}:t>'
-
-# we are going at ts(hello) to ts(bye)
 class Client(commands.Bot):
     async def on_ready(self):
         print(f'Logged on as {self.user}!')
+        channel = self.get_channel(discord_ids["oreo_general"])
+        asyncio.create_task(ExecuteTask(channel, discord_ids["oreo_role_static"]))
         try:
-            synced = await self.tree.sync()
+            synced = await self.tree.sync(guild=discord.Object(discord_ids["oreo_id"]))
+            synced = await self.tree.sync(guild=discord.Object(discord_ids["dev_id"]))
             if synced:
-                print(f'Bot is synced') 
+                print(f'Bot is synced')
         except Exception as e:
             print(f'Error syncing commands: {e}')
 
     async def on_message(self, message):
-        if "ts(" in message.content: 
+        if message.author == client.user:
+            return
+        # we are going at ts(hello) to ts(bye)
+        if "ts(" in message.content:
             text = message.content
             replacingText = re.findall(r"ts\(\d+:?\d*:?\d*\s?[aApP]?[mM]?\s?[\+\-]?\d?\s?\w*\)", text)
             replaceDict = {}
@@ -73,7 +54,7 @@ class Client(commands.Bot):
             pattern = re.compile("|".join(map(re.escape, replaceDict.keys())))
             newText = pattern.sub(lambda m: replaceDict[m.group()], text)
             await message.channel.send(newText)
-
+            return
     # async def on_message_edit(before, after):
     # async def on_message_delete(self, message):
     # async def on_member_join(member):
@@ -85,7 +66,7 @@ class Client(commands.Bot):
     # async def on_reaction_remove(reaction, user):
     # async def on_raw_message_delete(payload):
     # async def on_command_error(ctx, error):
-        
+
 intents = discord.Intents.default()
 intents.message_content = True
 
@@ -104,11 +85,31 @@ client = Client(command_prefix="!", intents=intents)
         app_commands.Choice(name="Relative Time <R>", value="R"),
         ])
 async def convertTimeline(interaction: discord.Interaction, time: str, utc: int, format: app_commands.Choice[str]):
+    if interaction.user == client:
+      return
     try:
         timeString = timezoneConverter(time, utc, format.value)
     except Exception as e:
         await interaction.response.send_message(f'{e}')
         return
-    await interaction.response.send_message(f'Time is: {timeString}')
+    await interaction.response.send_message(f'Time is: {timeString}', ephemeral=True)
+
+@client.tree.command(name="raidtime", description="Change Raiding Time", guilds=[discord.Object(id=guild_id) for guild_id in GUILD_ID])
+@app_commands.describe(day="Sat/Sun",
+                       time="New raiding time using ISO 8601 format. Example format: 17, 17:30")
+@app_commands.choices(day=[
+        app_commands.Choice(name="Sat", value=calendar.SATURDAY.name),
+        app_commands.Choice(name="Sun", value=calendar.SUNDAY.name),
+        ])
+async def changeRaidTime(interaction: discord.Interaction, day: app_commands.Choice[str], time: str):
+    if interaction.user == client and interaction.user.name != "fanazador":
+      await interaction.response.send_message(f'Only Fanazador can use this command', ephemeral=True)
+      return
+    try:
+      await ChangeTime(day.value, time)
+    except Exception as e:
+      await interaction.response.send_message(f'{e}')
+      return
+    await interaction.response.send_message(f'Changed raid time {str.capitalize(day.value)} to {raiding_time[day.value]}', ephemeral=True)
 
 client.run(os.getenv('DISCORD_TOKEN'))

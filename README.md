@@ -3,8 +3,10 @@ Parses messages and replaces frequently used time format into a timestamp.
 Add 'TS()' around the time you want to convert, and the bot will parse it and return with the message containing the timestamp.
 Supported format: hh, hh:mm, hh:mm:ss, hh am/pm. hh:mm am/pm, hh:mm:ss am/pm
 
-Argument:
-Timezone: Enter your local timezone. Ex. -5 (EST)/ -4(ET). If this is not passed, the bot will use EST as the default timezone
+Check time every minute and ping static when raid time is starting.
+
+Argument:\n
+Timezone: Enter your local timezone. Ex. -5 (EST)/ -4(ET). If this is not passed, the bot will use EST as the default timezone\n
 Format: Add the word 'Full' for a full date/time format.
 
 Example: TS(16:00:00 -5 Full), TS(15), TS(06 PM -5), TS(3 -5 Full)
