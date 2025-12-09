@@ -7,12 +7,12 @@ Supported format: hh, hh:mm, hh:mm:ss, hh am/pm. hh:mm am/pm, hh:mm:ss am/pm
 
 Check time every minute and ping static when raid time is starting.
 
-##Argument:
+## Argument:
 
 -Timezone: Enter your local timezone. Ex. -5 (EST)/ -4(ET). If this is not passed, the bot will use EST as the default timezone
 -Format: Add the word 'Full' for a full date/time format.
 
-##Example:
+## Example:
 TS(16:00:00 -5 Full), TS(15), TS(06 PM -5), TS(3 -5 Full)
 
 ![Discord Bot](https://github.com/user-attachments/assets/577562da-0ecc-4fa4-9f40-5fb775d23140)
