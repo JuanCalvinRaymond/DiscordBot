@@ -36,7 +36,7 @@ async def execute_task(channel: int):
         try:
           with open("DiscordId.json", "r") as file:
             ids = json.load(file)
-          if (last_ping == 0 or ((last_ping - datetime.datetime.now()) > datetime.timedelta(minutes=1))):
+          if (last_ping == 0 or ((last_ping - datetime.datetime.now()) > datetime.timedelta(days=1))):
             await channel.send(f'<@&{ids["role_to_ping"]}> Let\'s start hopping in VC. PF is up, pw is in pinned message. We are on Aether')
             last_ping = datetime.datetime.now()
         except (ValueError, FileNotFoundError) as e:

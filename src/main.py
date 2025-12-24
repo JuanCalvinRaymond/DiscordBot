@@ -84,7 +84,7 @@ client = Client(command_prefix="!", intents=intents)
         app_commands.Choice(name="Long Date/Time <F>", value="F"),
         app_commands.Choice(name="Relative Time <R>", value="R"),
         ])
-async def convertTimeline(interaction: discord.Interaction, time: str, utc: int, format: app_commands.Choice[str]):
+async def convert_timeline(interaction: discord.Interaction, time: str, utc: int, format: app_commands.Choice[str]):
     if interaction.user == client:
       return
     try:
@@ -101,7 +101,7 @@ async def convertTimeline(interaction: discord.Interaction, time: str, utc: int,
         app_commands.Choice(name="Sat", value=calendar.SATURDAY.name),
         app_commands.Choice(name="Sun", value=calendar.SUNDAY.name),
         ])
-async def changeRaidTime(interaction: discord.Interaction, day: app_commands.Choice[str], time: str):
+async def change_raid_time(interaction: discord.Interaction, day: app_commands.Choice[str], time: str):
     if interaction.user == client and interaction.user.name != "fanazador":
       await interaction.response.send_message(f'Only Fanazador can use this command', ephemeral=True)
       return
@@ -118,13 +118,7 @@ async def changeRaidTime(interaction: discord.Interaction, day: app_commands.Cho
         app_commands.Choice(name="Static", value="1089759665853825046"),
         app_commands.Choice(name="Ultimate", value="1299176112227876954"),
         ])
-async def changeRole(interaction: discord.Interaction, role: app_commands.Choice[str]):
-  """Change raiding time and save it to a json file for persistency.
-
-  Args:
-    day: Using calendar.Day enum
-    time: ISO 8601 compliant formating
-  """
+async def change_role(interaction: discord.Interaction, role: app_commands.Choice[str]):
   try:
     discord_ids["role_to_ping"] = int(role.value)
     with open("DiscordId.json", "w") as file:

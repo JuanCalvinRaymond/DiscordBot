@@ -4,7 +4,6 @@ import re
 
 est_timeZone = (4 if time.daylight else 5)
 
-
 def _timestamp_converter(arg: datetime) -> int:
     """Convert datetime object to Unix timestamp (int).
 
