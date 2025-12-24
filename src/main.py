@@ -20,7 +20,7 @@ class Client(commands.Bot):
     async def on_ready(self):
         print(f'Logged on as {self.user}!')
         channel = self.get_channel(discord_ids["oreo_general"])
-        asyncio.create_task(execute_task(channel, discord_ids["oreo_role_static"]))
+        asyncio.create_task(execute_task(channel))
         try:
             synced = await self.tree.sync(guild=discord.Object(discord_ids["oreo_id"]))
             synced = await self.tree.sync(guild=discord.Object(discord_ids["dev_id"]))
@@ -28,10 +28,10 @@ class Client(commands.Bot):
                 print(f'Bot is synced')
         except Exception as e:
             print(f'Error syncing commands: {e}')
-
     async def on_message(self, message):
         if message.author == client.user:
             return
+
         # we are going at ts(hello) to ts(bye)
         if "ts(" in message.content:
             text = message.content
@@ -112,4 +112,23 @@ async def changeRaidTime(interaction: discord.Interaction, day: app_commands.Cho
       return
     await interaction.response.send_message(f'Changed raid time {str.capitalize(day.value)} to {raiding_time[day.value]}', ephemeral=True)
 
+@client.tree.command(name="raidrole", description="Change raiding time", guilds=[discord.Object(id=guild_id) for guild_id in GUILD_ID])
+@app_commands.describe(role="Static/Ultimate")
+@app_commands.choices(role=[
+        app_commands.Choice(name="Static", value="1089759665853825046"),
+        app_commands.Choice(name="Ultimate", value="1299176112227876954"),
+        ])
+async def changeRole(interaction: discord.Interaction, role: app_commands.Choice[str]):
+  """Change raiding time and save it to a json file for persistency.
+
+  Args:
+    day: Using calendar.Day enum
+    time: ISO 8601 compliant formating
+  """
+  try:
+    discord_ids["role_to_ping"] = int(role.value)
+    with open("DiscordId.json", "w") as file:
+      json.dump(discord_ids, file, indent=4)
+  except FileNotFoundError as e:
+    await interaction.response.send_message(f'{e}', ephemeral=True)
 client.run(os.getenv('DISCORD_TOKEN'))
