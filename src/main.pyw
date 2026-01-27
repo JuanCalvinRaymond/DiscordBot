@@ -1,3 +1,4 @@
+#!/usr/bin/env pythonw
 import discord
 import re
 from datetime import datetime, timedelta
@@ -7,12 +8,18 @@ from discord_timestamp_converter import *
 from raid_notif import *
 import json
 import os
+import logging
 
+dir_path = os.path.dirname(os.path.realpath(__file__))
+logging.basicConfig(filename=f'{dir_path}/../discord_bot.log', filemode="w",
+                    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 try:
-    with open("DiscordId.json", "r") as f:
+    logging.info(f'trying to open {dir_path}/../DiscordId.json');
+    with open(f"{dir_path}/../DiscordId.json", "r") as f:
         discord_ids = json.load(f)
 except (ValueError, FileNotFoundError) as e:
     print(f'Error: {e}')
+    logging.exception("DiscordId.json can't be open")
 
 GUILD_ID = [discord_ids["oreo_id"], discord_ids["dev_id"]]
 
@@ -20,7 +27,9 @@ class Client(commands.Bot):
     async def on_ready(self):
         print(f'Logged on as {self.user}!')
         channel = self.get_channel(discord_ids["oreo_general"])
+        # dev_channel = self.get_channel(discord_ids["dev_general"])
         asyncio.create_task(execute_task(channel))
+        # asyncio.create_task(test(dev_channel))
         try:
             synced = await self.tree.sync(guild=discord.Object(discord_ids["oreo_id"]))
             synced = await self.tree.sync(guild=discord.Object(discord_ids["dev_id"]))
@@ -31,6 +40,9 @@ class Client(commands.Bot):
     async def on_message(self, message):
         if message.author == client.user:
             return
+
+        # if "test" in message.content:
+        #    test()
 
         # we are going at ts(hello) to ts(bye)
         if "ts(" in message.content:
@@ -121,8 +133,26 @@ async def change_raid_time(interaction: discord.Interaction, day: app_commands.C
 async def change_role(interaction: discord.Interaction, role: app_commands.Choice[str]):
   try:
     discord_ids["role_to_ping"] = int(role.value)
-    with open("DiscordId.json", "w") as file:
+    with open(f"{dir_path}/../DiscordId.json", "w") as file:
       json.dump(discord_ids, file, indent=4)
   except FileNotFoundError as e:
     await interaction.response.send_message(f'{e}', ephemeral=True)
+  await interaction.response.send_message(f'Changed raid role to {role.name}', ephemeral=True)
+
+@client.tree.command(name="raiddatacenter", description="Change raiding datacenter", guilds=[discord.Object(id=guild_id) for guild_id in GUILD_ID])
+@app_commands.describe(datacenter="Which datacenter the pf will be posted")
+@app_commands.choices(datacenter=[
+        app_commands.Choice(name="Aether", value="Aether"),
+        app_commands.Choice(name="Primal", value="Primal"),
+        app_commands.Choice(name="Crystal", value="Crystal"),
+        app_commands.Choice(name="Dynamis", value="Dynamis"),
+        ])
+async def change_role(interaction: discord.Interaction, datacenter: app_commands.Choice[str]):
+  try:
+    discord_ids["data_center"] = datacenter.value
+    with open(f"{dir_path}/../DiscordId.json", "w") as file:
+      json.dump(discord_ids, file, indent=4)
+  except FileNotFoundError as e:
+    await interaction.response.send_message(f'{e}', ephemeral=True)
+  await interaction.response.send_message(f'Changed raid role to {datacenter.name}', ephemeral=True)
 client.run(os.getenv('DISCORD_TOKEN'))
